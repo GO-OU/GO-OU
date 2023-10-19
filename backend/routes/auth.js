@@ -5,8 +5,12 @@ const {check, validationResult} = require('express-validator');
 const pool = require('../config/db.js');
 const admin = require('../config/firebaseAdmin');
 const { generateSalt } = require('../utils/cryptoUtils');
+const path = require("path");
+require('dotenv').config({path: path.join(__dirname, '../config/key.env')});
 // TODO Consider refresh tokens in conjunction with access tokens
 // TODO Integrate firebase-auth
+
+const SECRET_KEY = process.env.JWT_SECRET;
 const router = express.Router();
 
 router.post('/register', [
@@ -34,8 +38,8 @@ router.post('/register', [
         // here, save the user with the hashed password in the db
         await pool.query("INSERT INTO users (email, password) VALUES ($1, $2)", [email, hashedPassword]);
         // optionally generate and return a JWT
-        // TODO Replace YOUR_SECRET_KEY with the actual key
-        const token = jwt.sign({id: email}, 'YOUR_SECRET_KEY', {expiresIn: '1h'});
+        // TODO Replace YOUR_SECRET_KEY with the actual key.env
+        const token = jwt.sign({id: email}, SECRET_KEY, {expiresIn: '1h'});
         res.status(201).json({token});
 
     } catch (error) {
@@ -75,7 +79,7 @@ router.post('/login', [
             userId: user.rows[0].id
         }
 
-        const token = jwt.sign(payload, 'YOUR_SECRET_KEY', {expiresIn: '1h'});
+        const token = jwt.sign(payload, SECRET_KEY, {expiresIn: '1h'});
 
         // send token in res
         return res.json({token});
@@ -91,6 +95,7 @@ router.post('/login', [
 // Logout Route
 
 // etc.. Routes
+//console.log("JWT_SECRET", process.env.JWT_SECRET);
 
 module.exports = router;
 
